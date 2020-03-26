@@ -1,5 +1,6 @@
 package org.akaza.openclinica.controller.helper;
 
+import com.google.common.io.Files;
 import core.org.akaza.openclinica.bean.core.Role;
 import core.org.akaza.openclinica.bean.login.StudyUserRoleBean;
 import core.org.akaza.openclinica.bean.login.UserAccountBean;
@@ -14,6 +15,7 @@ import core.org.akaza.openclinica.dao.login.UserAccountDAO;
 import core.org.akaza.openclinica.exception.OpenClinicaException;
 import core.org.akaza.openclinica.exception.OpenClinicaSystemException;
 import core.org.akaza.openclinica.logic.importdata.PipeDelimitedDataHelper;
+import org.akaza.openclinica.service.SasFileConverterServiceImpl;
 import org.akaza.openclinica.web.restful.errors.ErrorConstants;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.http.HttpEntity;
@@ -28,9 +30,12 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,6 +54,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 
 import static org.akaza.openclinica.control.core.SecureController.USER_BEAN_NAME;
+@Configurable
 @Service("serviceHelper")
 public class RestfulServiceHelper {
 	
@@ -64,11 +70,25 @@ public class RestfulServiceHelper {
 	private UserAccountDAO userAccountDAO;
 	private PipeDelimitedDataHelper importDataHelper;
 	private MessageLogger messageLogger;
+	@Autowired
+	private SasFileConverterServiceImpl sasFileConverterService;
+
+	public RestfulServiceHelper() {
+
+	}
 
 	public RestfulServiceHelper(DataSource dataSource, StudyBuildService studyBuildService, StudyDao studyDao) {
 		this.dataSource = dataSource;
 		this.studyBuildService = studyBuildService;
 		this.studyDao = studyDao;
+//		this.sasFileConverterService = sasFileConverterService;
+	}
+
+	public RestfulServiceHelper(DataSource dataSource, StudyBuildService studyBuildService, StudyDao studyDao, SasFileConverterServiceImpl sasFileConverterService) {
+		this.dataSource = dataSource;
+		this.studyBuildService = studyBuildService;
+		this.studyDao = studyDao;
+		this.sasFileConverterService = sasFileConverterService;
 	}
 
 	/**
@@ -457,7 +477,7 @@ public class RestfulServiceHelper {
 	 				
 	 				 // prepare log file
 	 	 	 	 	String logFileName = null;
-	 	 	 	 	logFileName = buildLogFileName(file.getName()); 
+	 	 	 	 	logFileName = buildLogFileName(file.getName());
 	 	 	 	    this.getImportDataHelper().copyMappingFileToLogFile(mappingFile, logFileName,request);
 	 	 	 	    request.setAttribute("logFileName", logFileName);
 	 	 	 	    
@@ -583,7 +603,15 @@ public class RestfulServiceHelper {
 	 		return importCRFInfoSummary;
 	  }
 
-	    public ArrayList<File> splitDataFileAndProcesDataRowbyRow(File file,String studyOID) {
+	    public ArrayList<File> splitDataFileAndProcesDataRowbyRow(File file,String studyOID) throws IOException {
+	 		String importFileDir = this.getImportDataHelper().getImportFileDir(studyOID);
+	 		String fileType = Files.getFileExtension(file.getAbsolutePath());
+	 		if (fileType.equals("sas7bdat")) {
+	 			// convert sas to pipe-delimited
+				file = sasFileConverterService.convert(file);
+			} else if (fileType.equals("xlsx")) {
+	 			// convert xlsx to pipe-delimited
+			}
 			ArrayList<File> fileList = new ArrayList<>();
 		    BufferedReader reader;
 		    
@@ -591,7 +619,6 @@ public class RestfulServiceHelper {
 	            int count =1;	    	
 		    		    	
 		    	File splitFile;
-		    	String importFileDir = this.getImportDataHelper().getImportFileDir(studyOID);
 		    	
 		    	reader = new BufferedReader(new FileReader(file));
 		    	
@@ -716,7 +743,7 @@ public class RestfulServiceHelper {
 		public String buildLogFileName(String originalFileName) {
 			String logFileName = null;
 			if(originalFileName !=null) {	            	
-				originalFileName = originalFileName.substring(0, originalFileName.lastIndexOf(".txt"));
+				originalFileName = Files.getNameWithoutExtension(originalFileName);
 			}
 
 			Date now = new Date();	
