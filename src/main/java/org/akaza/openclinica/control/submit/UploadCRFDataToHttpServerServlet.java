@@ -37,6 +37,7 @@ import core.org.akaza.openclinica.core.SessionManager;
 import core.org.akaza.openclinica.core.form.StringUtil;
 import core.org.akaza.openclinica.dao.core.CoreResources;
 import core.org.akaza.openclinica.i18n.core.LocaleResolver;
+import org.akaza.openclinica.service.ExcelFileConverterServiceImpl;
 import org.akaza.openclinica.service.SasFileConverterServiceImpl;
 import org.akaza.openclinica.view.Page;
 import core.org.akaza.openclinica.web.InsufficientPermissionException;
@@ -1039,13 +1040,17 @@ public class UploadCRFDataToHttpServerServlet extends SecureController {
 
 	public RestfulServiceHelper getRestfulServiceHelper() {
 		if(restfulServiceHelper == null) {
-			restfulServiceHelper = new RestfulServiceHelper(this.getSM().getDataSource(), getStudyBuildService(), getStudyDao(), getSasFileConverterService());
+			restfulServiceHelper = new RestfulServiceHelper(this.getSM().getDataSource(), getStudyBuildService(), getStudyDao(), getSasFileConverterService(), getExcelFileConverterService());
 		}
 		return restfulServiceHelper;
 	}
 
 	protected SasFileConverterServiceImpl getSasFileConverterService(){
 		return (SasFileConverterServiceImpl) SpringServletAccess.getApplicationContext(context).getBean("sasFileConverterService");
+	}
+
+	protected ExcelFileConverterServiceImpl getExcelFileConverterService(){
+		return (ExcelFileConverterServiceImpl) SpringServletAccess.getApplicationContext(context).getBean("excelFileConverterService");
 	}
 
 	public void setRestfulServiceHelper(RestfulServiceHelper restfulServiceHelper) {

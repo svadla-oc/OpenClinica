@@ -14,9 +14,9 @@ public class SasFileConverterServiceImpl implements FileConverterService {
   public File convert(File sasFile) throws IOException {
     InputStream inputStream = new FileInputStream(sasFile);
     SasFileReader sasFileReader = new SasFileReaderImpl(inputStream);
-    File convertedFile = File.createTempFile(sasFile.getName(), ".txt");
+    File convertedFile = File.createTempFile(sasFile.getName(), FILE_SUFFIX);
     Writer writer = new FileWriter(convertedFile);
-    CSVDataWriter csvDataWriter = new CSVDataWriterImpl(writer, "|");
+    CSVDataWriter csvDataWriter = new CSVDataWriterImpl(writer, DELIMITER);
     csvDataWriter.writeColumnNames(sasFileReader.getColumns());
     csvDataWriter.writeRowsArray(sasFileReader.getColumns(), sasFileReader.readAll());
     writer.flush();

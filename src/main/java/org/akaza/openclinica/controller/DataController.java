@@ -473,6 +473,10 @@ public class DataController {
                  *  Now it's time to log successful message into log file                      
                  */ 
                 String studySubjectOID = odmContainer.getCrfDataPostImportContainer().getSubjectData().get(0).getSubjectOID();
+                if (studySubjectOID == null) {
+                  // Import was done using participantId, so use studySubjectId instead
+                  studySubjectOID = odmContainer.getCrfDataPostImportContainer().getSubjectData().get(0).getStudySubjectID();
+                }
                 String originalFileName = request.getHeader("originalFileName");
             	// sample file name like:originalFileName_123.txt,pipe_delimited_local_skip_2.txt
             	String recordNum = null;

@@ -15,6 +15,7 @@ import core.org.akaza.openclinica.dao.login.UserAccountDAO;
 import core.org.akaza.openclinica.exception.OpenClinicaException;
 import core.org.akaza.openclinica.exception.OpenClinicaSystemException;
 import core.org.akaza.openclinica.logic.importdata.PipeDelimitedDataHelper;
+import org.akaza.openclinica.service.ExcelFileConverterServiceImpl;
 import org.akaza.openclinica.service.SasFileConverterServiceImpl;
 import org.akaza.openclinica.web.restful.errors.ErrorConstants;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -70,8 +71,8 @@ public class RestfulServiceHelper {
 	private UserAccountDAO userAccountDAO;
 	private PipeDelimitedDataHelper importDataHelper;
 	private MessageLogger messageLogger;
-	@Autowired
 	private SasFileConverterServiceImpl sasFileConverterService;
+	private ExcelFileConverterServiceImpl excelFileConverterService;
 
 	public RestfulServiceHelper() {
 
@@ -81,14 +82,14 @@ public class RestfulServiceHelper {
 		this.dataSource = dataSource;
 		this.studyBuildService = studyBuildService;
 		this.studyDao = studyDao;
-//		this.sasFileConverterService = sasFileConverterService;
 	}
 
-	public RestfulServiceHelper(DataSource dataSource, StudyBuildService studyBuildService, StudyDao studyDao, SasFileConverterServiceImpl sasFileConverterService) {
+	public RestfulServiceHelper(DataSource dataSource, StudyBuildService studyBuildService, StudyDao studyDao, SasFileConverterServiceImpl sasFileConverterService, ExcelFileConverterServiceImpl excelFileConverterService) {
 		this.dataSource = dataSource;
 		this.studyBuildService = studyBuildService;
 		this.studyDao = studyDao;
 		this.sasFileConverterService = sasFileConverterService;
+		this.excelFileConverterService = excelFileConverterService;
 	}
 
 	/**
@@ -611,6 +612,7 @@ public class RestfulServiceHelper {
 				file = sasFileConverterService.convert(file);
 			} else if (fileType.equals("xlsx")) {
 	 			// convert xlsx to pipe-delimited
+				file = excelFileConverterService.convert(file);
 			}
 			ArrayList<File> fileList = new ArrayList<>();
 		    BufferedReader reader;
